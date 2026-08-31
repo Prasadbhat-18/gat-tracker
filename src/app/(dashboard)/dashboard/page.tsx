@@ -129,6 +129,15 @@ export default async function DashboardPage() {
             <span className="material-symbols-outlined text-[18px]">download</span>
             Export to Excel
           </Link>
+          {["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role) && (
+            <Link
+              href="/import"
+              className="flex items-center gap-2 bg-[#eff4ff] border border-[#0058be]/30 text-[#0058be] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#d6e3ff] transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              Import Excel
+            </Link>
+          )}
           {["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role) && (
             <Link
               href="/students/new"

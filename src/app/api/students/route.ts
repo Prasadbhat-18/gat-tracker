@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  if (!["SUPER_ADMIN", "HOD"].includes(session.user.role)) {
+  if (!["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 

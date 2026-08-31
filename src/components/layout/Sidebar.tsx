@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
   { label: "Higher Studies", href: "/higher-studies", icon: GraduationCap, roles: ["SUPER_ADMIN", "HOD", "PLACEMENT_OFFICER"] },
   { label: "Analytics", href: "/analytics", icon: BarChart3, roles: ["SUPER_ADMIN", "HOD", "PLACEMENT_OFFICER"] },
   { label: "Reports", href: "/reports", icon: FileText, roles: ["SUPER_ADMIN", "HOD", "PLACEMENT_OFFICER"] },
-  { label: "Import Data", href: "/import", icon: Upload, roles: ["SUPER_ADMIN", "HOD"] },
+  { label: "Import Data", href: "/import", icon: Upload, roles: ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"] },
   { label: "Export Data", href: "/export", icon: Download, roles: ["SUPER_ADMIN", "HOD", "PLACEMENT_OFFICER"] },
   { label: "Users & Roles", href: "/admin/users", icon: ShieldCheck, roles: ["SUPER_ADMIN"] },
   { label: "Audit Logs", href: "/audit-logs", icon: ScrollText, roles: ["SUPER_ADMIN"] },
@@ -80,21 +80,29 @@ export function Sidebar({ userRole, userName, userEmail }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-blue-900/50">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-blue-900/50">
         {!collapsed && (
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">G</span>
+            <div className="bg-white p-1 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+              <img
+                src="/gat-logo.png"
+                alt="GAT"
+                className="h-8 w-auto object-contain"
+              />
             </div>
             <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate leading-tight">GAT Tracker</p>
-              <p className="text-blue-300 text-xs truncate">{roleLabels[userRole]}</p>
+              <p className="text-white font-semibold text-xs truncate leading-tight">GAT Tracker</p>
+              <p className="text-blue-300 text-[10px] truncate">{roleLabels[userRole]}</p>
             </div>
           </div>
         )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center mx-auto">
-            <span className="text-white font-bold text-sm">G</span>
+          <div className="bg-white p-1 rounded-lg flex items-center justify-center mx-auto shadow-sm">
+            <img
+              src="/gat-logo.png"
+              alt="GAT"
+              className="h-7 w-auto object-contain"
+            />
           </div>
         )}
         {!collapsed && (

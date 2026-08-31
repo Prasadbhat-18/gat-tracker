@@ -30,6 +30,7 @@ export function TopBar({ userName, userRole, userEmail }: TopBarProps) {
     { label: "Internships", href: "/internships" },
     { label: "Projects", href: "/projects" },
     { label: "Placements", href: "/placements" },
+    { label: "Import", href: "/import" },
     { label: "Reports", href: "/export" },
     ...(userRole === "SUPER_ADMIN" ? [{ label: "Settings", href: "/settings" }] : []),
   ]
@@ -38,17 +39,13 @@ export function TopBar({ userName, userRole, userEmail }: TopBarProps) {
     <header className="bg-white border-b border-[#c4c6cf] w-full sticky top-0 z-40 shadow-none">
       <div className="flex justify-between items-center w-full px-4 md:px-8 max-w-[1280px] mx-auto h-16">
         {/* Left Branding */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded bg-[#eff4ff] flex items-center justify-center border border-[#c4c6cf]">
-            <span className="material-symbols-outlined text-[#000a1e] text-lg">school</span>
-          </div>
-          <Link href="/dashboard" className="text-base font-bold text-[#000a1e] tracking-tight truncate hidden sm:block">
-            Global Academy of Technology
-          </Link>
-          <Link href="/dashboard" className="text-sm font-bold text-[#000a1e] sm:hidden">
-            GAT
-          </Link>
-        </div>
+        <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <img
+            src="/gat-logo.png"
+            alt="Global Academy of Technology"
+            className="h-10 md:h-11 w-auto object-contain"
+          />
+        </Link>
 
         {/* Center Nav Links (Direct from Stitch screen1.html) */}
         <nav className="hidden lg:flex gap-5 items-center">

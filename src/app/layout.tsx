@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   },
   description:
     "Official institutional administrative system for Global Academy of Technology (GAT), Bengaluru.",
+  icons: {
+    icon: "/gat-logo.png",
+    shortcut: "/gat-logo.png",
+    apple: "/gat-logo.png",
+  },
 }
 
 export default function RootLayout({

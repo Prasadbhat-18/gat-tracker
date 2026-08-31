@@ -13,13 +13,11 @@ export default function LoginPage() {
       <header className="bg-white border-b border-[#c4c6cf] w-full sticky top-0 z-50 shadow-none">
         <div className="flex justify-between items-center w-full px-4 md:px-12 max-w-[1280px] mx-auto py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-[#eff4ff] flex items-center justify-center border border-[#c4c6cf]">
-              <span className="material-symbols-outlined text-[#000a1e] text-xl">school</span>
-            </div>
-            <h1 className="text-xl font-bold text-[#000a1e] tracking-tight hidden md:block">
-              Global Academy of Technology
-            </h1>
-            <h1 className="text-sm font-bold text-[#000a1e] md:hidden">GAT</h1>
+            <img
+              src="/gat-logo.png"
+              alt="Global Academy of Technology"
+              className="h-12 sm:h-14 w-auto object-contain"
+            />
           </div>
           <a
             href="#login-form"
@@ -142,9 +140,11 @@ export default function LoginPage() {
         <section id="login-form" className="py-16 px-4 md:px-12 max-w-[1280px] mx-auto scroll-mt-20">
           <div className="max-w-md mx-auto bg-white border border-[#c4c6cf] rounded-2xl p-6 sm:p-8 shadow-sm">
             <div className="text-center mb-6 pb-4 border-b border-[#eff4ff]">
-              <div className="w-12 h-12 rounded-xl bg-[#eff4ff] text-[#000a1e] flex items-center justify-center mx-auto mb-3 border border-[#c4c6cf]">
-                <span className="material-symbols-outlined text-2xl">lock</span>
-              </div>
+              <img
+                src="/gat-logo.png"
+                alt="Global Academy of Technology"
+                className="h-16 w-auto object-contain mx-auto mb-3"
+              />
               <h2 className="text-xl font-bold text-[#000a1e]">Staff Portal Sign In</h2>
               <p className="text-xs text-[#44474e] mt-1">
                 Authorized College Personnel Access Only
