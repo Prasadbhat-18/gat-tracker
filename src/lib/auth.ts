@@ -68,5 +68,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     maxAge: 8 * 60 * 60, // 8 hours
   },
   trustHost: true,
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "gat_tracker_production_secret_key_8f4b62d87e04f05c3639912061e89326",
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
 })
