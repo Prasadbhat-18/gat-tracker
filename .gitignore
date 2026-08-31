@@ -1,0 +1,39 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js build output
+/.next/
+/out/
+/build
+.turbo
+
+# Environment variables
+.env
+.env*.local
+.env.production
+.env.development
+!.env.example
+
+# IDE & system files
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.agents
+.gemini
+.idea
+.vscode
+*.tsbuildinfo
+
+# Vercel deployment metadata
+.vercel

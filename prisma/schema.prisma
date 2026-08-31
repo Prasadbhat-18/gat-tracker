@@ -1,0 +1,592 @@
+// GAT Student Achievement & Placement Tracking System
+// Prisma Schema — MongoDB Provider
+// All entities use MongoDB ObjectId as primary key
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  HOD
+  FACULTY
+  PLACEMENT_OFFICER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PlacementStatus {
+  NOT_APPLICABLE
+  ELIGIBLE
+  APPLIED
+  SHORTLISTED
+  SELECTED
+  PLACED
+  NOT_PLACED
+  OPTED_OUT
+  HIGHER_STUDIES
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  DETAINED
+  DROPPED
+  TRANSFERRED
+}
+
+enum AchievementCategory {
+  ACADEMIC
+  TECHNICAL
+  HACKATHON
+  CODING_COMPETITION
+  RESEARCH
+  PUBLICATION
+  PAPER_PRESENTATION
+  PATENT
+  SPORTS
+  CULTURAL
+  LEADERSHIP
+  SOCIAL_SERVICE
+  CERTIFICATION
+  OTHER
+}
+
+enum AchievementLevel {
+  INTERNATIONAL
+  NATIONAL
+  STATE
+  UNIVERSITY
+  COLLEGE
+  DEPARTMENT
+}
+
+enum InternshipType {
+  INDUSTRY
+  RESEARCH
+  NGO
+  GOVERNMENT
+  STARTUP
+  OTHER
+}
+
+enum InternshipStatus {
+  ONGOING
+  COMPLETED
+  DISCONTINUED
+}
+
+enum ProjectType {
+  FINAL_YEAR
+  MINI_PROJECT
+  RESEARCH
+  OPEN_SOURCE
+  INTERNSHIP_PROJECT
+  PERSONAL
+  OTHER
+}
+
+enum OfferStatus {
+  OFFERED
+  ACCEPTED
+  REJECTED_BY_STUDENT
+  OFFER_REVOKED
+  JOINED
+}
+
+enum CareerOutcome {
+  PLACED
+  HIGHER_STUDIES
+  ENTREPRENEURSHIP
+  GOVERNMENT_JOB
+  FAMILY_BUSINESS
+  NOT_PLACED
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  IMPORT
+  EXPORT
+  LOGIN
+  LOGOUT
+  VERIFY
+  REJECT
+}
+
+// ─────────────────────────────────────────────
+// USERS & ACCESS CONTROL
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole
+  isActive     Boolean  @default(true)
+  phone        String?
+  designation  String?
+  profilePhoto String?
+
+  // Relations
+  departmentId String?     @db.ObjectId
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  // What this user manages
+  assignedStudents FacultyStudentAssignment[]
+  addedAchievements Achievement[]  @relation("AchievementAddedBy")
+  verifiedAchievements Achievement[] @relation("AchievementVerifiedBy")
+  addedCertifications Certification[] @relation("CertificationAddedBy")
+  addedInternships Internship[]    @relation("InternshipAddedBy")
+  addedProjects    Project[]       @relation("ProjectAddedBy")
+  addedPlacements  Placement[]     @relation("PlacementAddedBy")
+  auditLogs        AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// DEPARTMENTS & BATCHES
+// ─────────────────────────────────────────────
+
+model Department {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String  @unique
+  code        String  @unique  // e.g., CSE, ISE, ECE
+  description String?
+  isActive    Boolean @default(true)
+  hodId       String? @db.ObjectId
+
+  // Relations
+  users    User[]
+  students Student[]
+  batches  AcademicBatch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model AcademicBatch {
+  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
+  name                 String  @unique // e.g., "2023-2027"
+  admissionYear        Int
+  expectedGraduationYear Int
+  isActive             Boolean @default(true)
+  description          String?
+
+  // Relations
+  departmentId String?     @db.ObjectId
+  department   Department? @relation(fields: [departmentId], references: [id])
+  students     Student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("academic_batches")
+}
+
+// ─────────────────────────────────────────────
+// STUDENTS
+// ─────────────────────────────────────────────
+
+model Student {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  usn          String        @unique   // e.g., 1GA21CS001
+  name         String
+  email        String?       @unique
+  phone        String?
+  dateOfBirth  DateTime?
+  gender       String?
+  profilePhoto String?
+  address      String?
+
+  // Academic
+  departmentId String       @db.ObjectId
+  department   Department   @relation(fields: [departmentId], references: [id])
+  batchId      String       @db.ObjectId
+  batch        AcademicBatch @relation(fields: [batchId], references: [id])
+
+  admissionYear Int
+  currentYear   Int          @default(1)  // 1, 2, 3, 4
+  section       String?
+  cgpa          Float?
+  backlogs      Int          @default(0)
+
+  status          StudentStatus   @default(ACTIVE)
+  placementStatus PlacementStatus @default(ELIGIBLE)
+  careerOutcome   CareerOutcome?
+
+  // Relations
+  academicRecords   AcademicRecord[]
+  achievements      Achievement[]
+  certifications    Certification[]
+  internships       Internship[]
+  projects          Project[]
+  placements        Placement[]
+  higherStudies     HigherStudy[]
+  documents         Document[]
+  assignedFaculty   FacultyStudentAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("students")
+}
+
+model FacultyStudentAssignment {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String  @db.ObjectId
+  studentId String  @db.ObjectId
+  user      User    @relation(fields: [userId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@unique([userId, studentId])
+  @@map("faculty_student_assignments")
+}
+
+// ─────────────────────────────────────────────
+// ACADEMIC RECORDS
+// ─────────────────────────────────────────────
+
+model AcademicRecord {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId  String  @db.ObjectId
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  semester      Int
+  academicYear  String  // e.g., "2023-24"
+  sgpa          Float?
+  cgpa          Float?
+  backlogs      Int     @default(0)
+  activeBacklogs Int    @default(0)
+  totalCredits  Int?
+  earnedCredits Int?
+  remarks       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, semester])
+  @@map("academic_records")
+}
+
+// ─────────────────────────────────────────────
+// ACHIEVEMENTS
+// ─────────────────────────────────────────────
+
+model Achievement {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String @db.ObjectId
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  title             String
+  category          AchievementCategory
+  level             AchievementLevel?
+  organization      String?
+  achievementDate   DateTime?
+  position          String?   // e.g., "1st Place", "Runner-up"
+  description       String?
+  documentUrl       String?
+
+  verificationStatus VerificationStatus @default(PENDING)
+  addedById          String  @db.ObjectId
+  addedBy            User    @relation("AchievementAddedBy", fields: [addedById], references: [id])
+  verifiedById       String? @db.ObjectId
+  verifiedBy         User?   @relation("AchievementVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedAt         DateTime?
+  remarks            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("achievements")
+}
+
+// ─────────────────────────────────────────────
+// CERTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Certification {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String  @db.ObjectId
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  name              String
+  issuingOrg        String
+  issueDate         DateTime?
+  expiryDate        DateTime?
+  credentialId      String?
+  credentialUrl     String?
+  certificateUrl    String?
+  description       String?
+
+  verificationStatus VerificationStatus @default(PENDING)
+  addedById          String  @db.ObjectId
+  addedBy            User    @relation("CertificationAddedBy", fields: [addedById], references: [id])
+  remarks            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("certifications")
+}
+
+// ─────────────────────────────────────────────
+// INTERNSHIPS
+// ─────────────────────────────────────────────
+
+model Internship {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String  @db.ObjectId
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  company         String
+  role            String
+  startDate       DateTime?
+  endDate         DateTime?
+  durationWeeks   Int?
+  location        String?
+  stipend         Float?
+  internshipType  InternshipType  @default(INDUSTRY)
+  description     String?
+  certificateUrl  String?
+  status          InternshipStatus @default(COMPLETED)
+
+  addedById String @db.ObjectId
+  addedBy   User   @relation("InternshipAddedBy", fields: [addedById], references: [id])
+  remarks   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("internships")
+}
+
+// ─────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────
+
+model Project {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String  @db.ObjectId
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  title            String
+  description      String?
+  technologies     String[]
+  projectType      ProjectType   @default(MINI_PROJECT)
+  startDate        DateTime?
+  endDate          DateTime?
+  teamMembers      String[]       // USNs of other team members
+  facultyGuide     String?
+  githubUrl        String?
+  demoUrl          String?
+  documentUrl      String?
+
+  verificationStatus VerificationStatus @default(PENDING)
+  addedById          String  @db.ObjectId
+  addedBy            User    @relation("ProjectAddedBy", fields: [addedById], references: [id])
+  remarks            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("projects")
+}
+
+// ─────────────────────────────────────────────
+// COMPANIES & PLACEMENT DRIVES
+// ─────────────────────────────────────────────
+
+model Company {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String  @unique
+  industry    String?
+  website     String?
+  location    String?
+  description String?
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  logoUrl     String?
+  isActive    Boolean @default(true)
+
+  placementDrives PlacementDrive[]
+  placements      Placement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
+}
+
+model PlacementDrive {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  companyId    String  @db.ObjectId
+  company      Company @relation(fields: [companyId], references: [id])
+
+  driveName        String
+  academicYear     String    // e.g., "2024-25"
+  driveDate        DateTime?
+  jobRole          String
+  jobLocation      String?
+  ctcOffered       Float?
+  ctcBreakup       String?
+  eligibilityCriteria String?
+  minCgpa          Float?
+  maxBacklogs      Int?
+  eligibleBatches  String[]  // batch IDs
+  eligibleDepts    String[]  // department codes
+  description      String?
+  isActive         Boolean   @default(true)
+
+  placements Placement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("placement_drives")
+}
+
+// ─────────────────────────────────────────────
+// PLACEMENTS (Student Offers)
+// ─────────────────────────────────────────────
+
+model Placement {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String  @db.ObjectId
+  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  companyId       String  @db.ObjectId
+  company         Company @relation(fields: [companyId], references: [id])
+  driveId         String? @db.ObjectId
+  drive           PlacementDrive? @relation(fields: [driveId], references: [id])
+
+  jobRole         String
+  ctc             Float?    // in LPA
+  location        String?
+  offerDate       DateTime?
+  joiningDate     DateTime?
+  offerStatus     OfferStatus @default(OFFERED)
+  isFinalAccepted Boolean  @default(false)  // which offer the student finally accepted
+  offerLetterUrl  String?
+  remarks         String?
+
+  addedById String @db.ObjectId
+  addedBy   User   @relation("PlacementAddedBy", fields: [addedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("placements")
+}
+
+// ─────────────────────────────────────────────
+// HIGHER STUDIES
+// ─────────────────────────────────────────────
+
+model HigherStudy {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String  @db.ObjectId
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  institution    String
+  program        String    // e.g., M.Tech, MBA, MS, Ph.D
+  specialization String?
+  country        String?
+  examName       String?   // GATE, GRE, GMAT, CAT
+  examScore      String?
+  admissionYear  Int?
+  scholarshipInfo String?
+  remarks        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("higher_studies")
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENTS
+// ─────────────────────────────────────────────
+
+model Document {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  studentId String  @db.ObjectId
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  originalName String
+  fileType     String
+  fileSize     Int
+  fileUrl      String
+  category     String    // achievement, certification, internship, offer_letter, project, other
+  referenceId  String?   // ID of the related achievement/cert/internship
+  uploadedById String    @db.ObjectId
+  description  String?
+
+  createdAt DateTime @default(now())
+
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOGS
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  action      AuditAction
+  module      String       // students, achievements, placements, etc.
+  recordId    String?
+  recordDesc  String?      // Human-readable description of what changed
+  oldValue    String?      // JSON of previous state
+  newValue    String?      // JSON of new state
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String  @db.ObjectId   // who receives this notification
+  title      String
+  message    String
+  type       String   // info, success, warning, error
+  isRead     Boolean  @default(false)
+  link       String?  // optional deep link
+
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
