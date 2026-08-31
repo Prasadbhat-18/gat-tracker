@@ -20,18 +20,18 @@ export function LoginForm() {
 
     try {
       const result = await signIn("credentials", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         redirect: false,
       })
 
-      if (result?.error) {
+      if (result?.error || (result && !result.ok)) {
         setError("Invalid email or password. Please verify your staff credentials.")
       } else {
-        router.push("/dashboard")
-        router.refresh()
+        window.location.href = "/dashboard"
       }
-    } catch {
+    } catch (err: any) {
+      console.error("Sign in error:", err)
       setError("An unexpected connection error occurred. Please try again.")
     } finally {
       setIsLoading(false)
