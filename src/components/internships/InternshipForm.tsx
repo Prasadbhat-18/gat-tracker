@@ -14,9 +14,11 @@ interface StudentOption {
 interface InternshipFormProps {
   students: StudentOption[]
   preselectedUsn?: string
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
-export function InternshipForm({ students, preselectedUsn }: InternshipFormProps) {
+export function InternshipForm({ students, preselectedUsn, onSuccess, onCancel }: InternshipFormProps) {
   const router = useRouter()
   const [usnInput, setUsnInput] = useState(preselectedUsn ?? "")
   const [company, setCompany] = useState("")
@@ -103,8 +105,12 @@ export function InternshipForm({ students, preselectedUsn }: InternshipFormProps
 
       setSuccessMsg("Internship recorded successfully!")
       setTimeout(() => {
-        router.push("/internships")
-        router.refresh()
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/internships")
+          router.refresh()
+        }
       }, 1000)
     } catch (err: any) {
       setErrorMsg(err.message || "An unexpected error occurred")
@@ -378,12 +384,22 @@ export function InternshipForm({ students, preselectedUsn }: InternshipFormProps
 
         {/* Submit */}
         <div className="flex justify-end gap-3 pt-4 border-t border-[#eff4ff]">
-          <Link
-            href="/internships"
-            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
-          >
-            Cancel
-          </Link>
+          {onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+            >
+              Cancel
+            </button>
+          ) : (
+            <Link
+              href="/internships"
+              className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+            >
+              Cancel
+            </Link>
+          )}
           <button
             type="submit"
             disabled={isSubmitting || isUploading}

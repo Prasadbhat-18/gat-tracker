@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import Link from "next/link"
+import { HigherStudyModal } from "@/components/higher-studies/HigherStudyModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Higher Studies" }
@@ -15,16 +16,41 @@ export default async function HigherStudiesPage() {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const higherStudies = await prisma.higherStudy.findMany({
-    where,
-    include: {
-      student: { select: { name: true, usn: true, department: { select: { code: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
 
-  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
+  const [higherStudies, students] = await Promise.all([
+    prisma.higherStudy.findMany({
+      where,
+      include: {
+        student: { select: { name: true, usn: true, department: { select: { code: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
+
+  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role)
 
   return (
     <div className="space-y-6 max-w-[1280px] mx-auto">
@@ -40,13 +66,7 @@ export default async function HigherStudiesPage() {
         </div>
 
         {canEdit && (
-          <Link
-            href="/higher-studies/new"
-            className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Add Higher Study Record
-          </Link>
+          <HigherStudyModal students={formattedStudents} />
         )}
       </div>
 
@@ -61,13 +81,13 @@ export default async function HigherStudiesPage() {
               MS, M.Tech, MBA, and PhD admissions along with competitive exam scores (GATE, GRE, CAT) will appear here.
             </p>
             {canEdit && (
-              <Link
-                href="/higher-studies/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add First Higher Study Record
-              </Link>
+              <div className="mt-6">
+                <HigherStudyModal
+                  students={formattedStudents}
+                  buttonText="Add First Higher Study Record"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (

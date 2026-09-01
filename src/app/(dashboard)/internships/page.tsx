@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { InternshipModal } from "@/components/internships/InternshipModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Internships" }
@@ -17,15 +18,40 @@ export default async function InternshipsPage() {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const internships = await prisma.internship.findMany({
-    where,
-    include: {
-      student: { select: { name: true, usn: true, department: { select: { code: true } } } },
-      addedBy: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
+
+  const [internships, students] = await Promise.all([
+    prisma.internship.findMany({
+      where,
+      include: {
+        student: { select: { name: true, usn: true, department: { select: { code: true } } } },
+        addedBy: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
 
   const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role)
 
@@ -51,13 +77,7 @@ export default async function InternshipsPage() {
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
             </Link>
-            <Link
-              href="/internships/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Internship
-            </Link>
+            <InternshipModal students={formattedStudents} />
           </div>
         )}
       </div>
@@ -73,13 +93,13 @@ export default async function InternshipsPage() {
               Industry internship records, monthly stipends, and certificate verifications will appear here.
             </p>
             {canEdit && (
-              <Link
-                href="/internships/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add First Internship
-              </Link>
+              <div className="mt-6">
+                <InternshipModal
+                  students={formattedStudents}
+                  buttonText="Add First Internship"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { ProjectModal } from "@/components/projects/ProjectModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Projects" }
@@ -16,17 +17,42 @@ export default async function ProjectsPage() {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const projects = await prisma.project.findMany({
-    where,
-    include: {
-      student: { select: { name: true, usn: true, department: { select: { code: true } } } },
-      addedBy: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
 
-  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
+  const [projects, students] = await Promise.all([
+    prisma.project.findMany({
+      where,
+      include: {
+        student: { select: { name: true, usn: true, department: { select: { code: true } } } },
+        addedBy: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
+
+  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role)
 
   return (
     <div className="space-y-6 max-w-[1280px] mx-auto">
@@ -50,13 +76,7 @@ export default async function ProjectsPage() {
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
             </Link>
-            <Link
-              href="/projects/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Project
-            </Link>
+            <ProjectModal students={formattedStudents} />
           </div>
         )}
       </div>
@@ -72,13 +92,13 @@ export default async function ProjectsPage() {
               Mini-projects, capstones, and faculty-guided research projects will appear here once added.
             </p>
             {canEdit && (
-              <Link
-                href="/projects/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add First Project
-              </Link>
+              <div className="mt-6">
+                <ProjectModal
+                  students={formattedStudents}
+                  buttonText="Add First Project"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (

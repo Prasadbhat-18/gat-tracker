@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { AchievementModal } from "@/components/achievements/AchievementModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Achievements" }
@@ -17,17 +18,42 @@ export default async function AchievementsPage() {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const achievements = await prisma.achievement.findMany({
-    where,
-    include: {
-      student: {
-        select: { name: true, usn: true, department: { select: { code: true } } },
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
+
+  const [achievements, students] = await Promise.all([
+    prisma.achievement.findMany({
+      where,
+      include: {
+        student: {
+          select: { name: true, usn: true, department: { select: { code: true } } },
+        },
+        addedBy: { select: { name: true } },
       },
-      addedBy: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
 
   const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
 
@@ -66,13 +92,7 @@ export default async function AchievementsPage() {
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
             </Link>
-            <Link
-              href="/achievements/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Achievement
-            </Link>
+            <AchievementModal students={formattedStudents} />
           </div>
         )}
       </div>
@@ -89,13 +109,13 @@ export default async function AchievementsPage() {
               Student awards, hackathons, papers, and competition records will appear here once entered.
             </p>
             {canEdit && (
-              <Link
-                href="/achievements/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add First Achievement
-              </Link>
+              <div className="mt-6">
+                <AchievementModal
+                  students={formattedStudents}
+                  buttonText="Add First Achievement"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (

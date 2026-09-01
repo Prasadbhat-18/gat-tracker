@@ -25,9 +25,11 @@ interface StudentOption {
 interface CertificationFormProps {
   students: StudentOption[]
   preselectedUsn?: string
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
-export function CertificationForm({ students, preselectedUsn }: CertificationFormProps) {
+export function CertificationForm({ students, preselectedUsn, onSuccess, onCancel }: CertificationFormProps) {
   const router = useRouter()
   const [usn, setUsn] = useState(preselectedUsn ?? (students[0]?.usn ?? ""))
   const [name, setName] = useState("")
@@ -116,9 +118,13 @@ export function CertificationForm({ students, preselectedUsn }: CertificationFor
 
       setFormSuccess(true)
       setTimeout(() => {
-        router.push("/certifications")
-        router.refresh()
-      }, 1200)
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/certifications")
+          router.refresh()
+        }
+      }, 1000)
     } catch (err: any) {
       console.error(err)
       setFormError(err.message || "Failed to save certification")
@@ -364,13 +370,24 @@ export function CertificationForm({ students, preselectedUsn }: CertificationFor
         )}
       </div>
 
+      {/* Submit Button */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#eff4ff]">
-        <Link
-          href="/certifications"
-          className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
-        >
-          Cancel
-        </Link>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+          >
+            Cancel
+          </button>
+        ) : (
+          <Link
+            href="/certifications"
+            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+          >
+            Cancel
+          </Link>
+        )}
         <button
           type="submit"
           disabled={isSubmitting || formSuccess}

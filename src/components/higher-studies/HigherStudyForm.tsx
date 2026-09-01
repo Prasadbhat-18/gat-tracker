@@ -14,9 +14,11 @@ interface StudentOption {
 interface HigherStudyFormProps {
   students: StudentOption[]
   preselectedUsn?: string
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
-export function HigherStudyForm({ students, preselectedUsn }: HigherStudyFormProps) {
+export function HigherStudyForm({ students, preselectedUsn, onSuccess, onCancel }: HigherStudyFormProps) {
   const router = useRouter()
   const [usnInput, setUsnInput] = useState(preselectedUsn ?? "")
   const [institution, setInstitution] = useState("")
@@ -76,10 +78,14 @@ export function HigherStudyForm({ students, preselectedUsn }: HigherStudyFormPro
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to record higher studies")
 
-      setSuccessMsg("Higher studies admission recorded successfully!")
+      setSuccessMsg("Higher studies record logged successfully!")
       setTimeout(() => {
-        router.push("/higher-studies")
-        router.refresh()
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/higher-studies")
+          router.refresh()
+        }
       }, 1000)
     } catch (err: any) {
       setErrorMsg(err.message || "An unexpected error occurred")
@@ -292,12 +298,22 @@ export function HigherStudyForm({ students, preselectedUsn }: HigherStudyFormPro
 
         {/* Submit */}
         <div className="flex justify-end gap-3 pt-4 border-t border-[#eff4ff]">
-          <Link
-            href="/higher-studies"
-            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
-          >
-            Cancel
-          </Link>
+          {onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+            >
+              Cancel
+            </button>
+          ) : (
+            <Link
+              href="/higher-studies"
+              className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+            >
+              Cancel
+            </Link>
+          )}
           <button
             type="submit"
             disabled={isSubmitting}

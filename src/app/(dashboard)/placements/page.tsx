@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { formatDate, formatCTC } from "@/lib/utils"
+import { PlacementModal } from "@/components/placements/PlacementModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Placements" }
@@ -15,27 +16,57 @@ export default async function PlacementsPage() {
   const isPlacement = session.user.role === "PLACEMENT_OFFICER"
   const where: Record<string, unknown> = {}
 
-  if (session.user.role === "HOD" && session.user.departmentId) {
+  if (!isAdmin && !isPlacement && session.user.departmentId) {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const placements = await prisma.placement.findMany({
-    where,
-    include: {
-      student: {
-        select: {
-          name: true,
-          usn: true,
-          department: { select: { code: true } },
-          batch: { select: { name: true } },
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && !isPlacement && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
+
+  const [placements, students, companies] = await Promise.all([
+    prisma.placement.findMany({
+      where,
+      include: {
+        student: {
+          select: {
+            name: true,
+            usn: true,
+            department: { select: { code: true } },
+            batch: { select: { name: true } },
+          },
         },
+        company: { select: { name: true, industry: true } },
+        drive: { select: { driveName: true } },
       },
-      company: { select: { name: true, industry: true } },
-      drive: { select: { driveName: true } },
-    },
-    orderBy: { offerDate: "desc" },
-    take: 200,
-  })
+      orderBy: { offerDate: "desc" },
+      take: 200,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+    prisma.company.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
 
   // Stats
   const placed = placements.filter((p) => p.isFinalAccepted)
@@ -66,13 +97,7 @@ export default async function PlacementsPage() {
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
             </Link>
-            <Link
-              href="/placements/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Record Placement
-            </Link>
+            <PlacementModal students={formattedStudents} companies={companies} />
           </div>
         )}
       </div>
@@ -104,13 +129,14 @@ export default async function PlacementsPage() {
               Campus recruitment offers, verified salary packages, and appointment letters will appear here.
             </p>
             {(isAdmin || isPlacement) && (
-              <Link
-                href="/placements/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Record First Placement
-              </Link>
+              <div className="mt-6">
+                <PlacementModal
+                  students={formattedStudents}
+                  companies={companies}
+                  buttonText="Record First Placement"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (

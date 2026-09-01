@@ -27,9 +27,11 @@ interface StudentOption {
 interface AchievementFormProps {
   students: StudentOption[]
   preselectedUsn?: string
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
-export function AchievementForm({ students, preselectedUsn }: AchievementFormProps) {
+export function AchievementForm({ students, preselectedUsn, onSuccess, onCancel }: AchievementFormProps) {
   const router = useRouter()
   const [usn, setUsn] = useState(preselectedUsn ?? (students[0]?.usn ?? ""))
   const [title, setTitle] = useState("")
@@ -129,9 +131,13 @@ export function AchievementForm({ students, preselectedUsn }: AchievementFormPro
 
       setFormSuccess(true)
       setTimeout(() => {
-        router.push("/achievements")
-        router.refresh()
-      }, 1200)
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/achievements")
+          router.refresh()
+        }
+      }, 1000)
     } catch (err: any) {
       console.error(err)
       setFormError(err.message || "An error occurred while saving the achievement")
@@ -469,12 +475,22 @@ export function AchievementForm({ students, preselectedUsn }: AchievementFormPro
 
       {/* Submit Button */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#eff4ff]">
-        <Link
-          href="/achievements"
-          className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
-        >
-          Cancel
-        </Link>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+          >
+            Cancel
+          </button>
+        ) : (
+          <Link
+            href="/achievements"
+            className="px-5 py-2.5 rounded-xl border border-[#c4c6cf] text-xs font-semibold text-[#44474e] hover:bg-[#f8f9ff] transition"
+          >
+            Cancel
+          </Link>
+        )}
         <button
           type="submit"
           disabled={isSubmitting || formSuccess}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { CertificationModal } from "@/components/certifications/CertificationModal"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Certifications" }
@@ -17,17 +18,42 @@ export default async function CertificationsPage() {
     where.student = { departmentId: session.user.departmentId }
   }
 
-  const certifications = await prisma.certification.findMany({
-    where,
-    include: {
-      student: { select: { name: true, usn: true, department: { select: { code: true } } } },
-      addedBy: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+  const studentWhere: Record<string, unknown> = { status: "ACTIVE" }
+  if (!isAdmin && session.user.departmentId) {
+    studentWhere.departmentId = session.user.departmentId
+  }
 
-  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
+  const [certifications, students] = await Promise.all([
+    prisma.certification.findMany({
+      where,
+      include: {
+        student: { select: { name: true, usn: true, department: { select: { code: true } } } },
+        addedBy: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        usn: true,
+        name: true,
+        department: { select: { code: true } },
+      },
+      orderBy: { usn: "asc" },
+      take: 300,
+    }),
+  ])
+
+  const formattedStudents = students.map((s) => ({
+    id: s.id,
+    usn: s.usn,
+    name: s.name,
+    departmentCode: s.department.code,
+  }))
+
+  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role)
 
   return (
     <div className="space-y-6 max-w-[1280px] mx-auto">
@@ -51,13 +77,7 @@ export default async function CertificationsPage() {
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
             </Link>
-            <Link
-              href="/certifications/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Certification
-            </Link>
+            <CertificationModal students={formattedStudents} />
           </div>
         )}
       </div>
@@ -73,13 +93,13 @@ export default async function CertificationsPage() {
               Industry cloud credentials, NPTEL, Coursera, and professional certifications will appear here.
             </p>
             {canEdit && (
-              <Link
-                href="/certifications/new"
-                className="mt-6 flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add First Certification
-              </Link>
+              <div className="mt-6">
+                <CertificationModal
+                  students={formattedStudents}
+                  buttonText="Add First Certification"
+                  buttonClassName="flex items-center gap-2 bg-white border border-[#c4c6cf] text-[#000a1e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#eff4ff] transition-colors shadow-sm cursor-pointer"
+                />
+              </div>
             )}
           </div>
         ) : (
