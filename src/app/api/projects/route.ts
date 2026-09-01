@@ -91,11 +91,32 @@ export async function POST(req: Request) {
       if (!isNaN(parsed.getTime())) endDate = parsed
     }
 
+    const validProjectTypes = [
+      "FINAL_YEAR",
+      "MINI_PROJECT",
+      "RESEARCH",
+      "OPEN_SOURCE",
+      "INTERNSHIP_PROJECT",
+      "PERSONAL",
+      "OTHER",
+    ]
+    let projectType: any = "MINI_PROJECT"
+    if (body.projectType) {
+      const pt = String(body.projectType).trim().toUpperCase()
+      if (validProjectTypes.includes(pt)) {
+        projectType = pt
+      } else if (pt === "CAPSTONE" || pt === "MAJOR_PROJECT") {
+        projectType = "FINAL_YEAR"
+      } else {
+        projectType = "OTHER"
+      }
+    }
+
     const project = await prisma.project.create({
       data: {
         studentId,
         title: String(body.title).trim(),
-        projectType: body.projectType || "MINI_PROJECT",
+        projectType,
         description: body.description || null,
         technologies,
         teamMembers,

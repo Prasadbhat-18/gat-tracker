@@ -202,12 +202,13 @@ export function ProjectForm({ students, preselectedUsn, onSuccess, onCancel }: P
               onChange={(e) => setProjectType(e.target.value)}
               className="w-full text-xs font-medium bg-[#f8f9ff] border border-[#c4c6cf] rounded-xl px-4 py-2.5 outline-none focus:border-[#0058be]"
             >
-              <option value="CAPSTONE">Capstone / Final Year Project</option>
+              <option value="FINAL_YEAR">Final Year / Capstone Project</option>
               <option value="MINI_PROJECT">Mini Project</option>
               <option value="RESEARCH">Research Project</option>
-              <option value="HACKATHON">Hackathon Build</option>
+              <option value="OPEN_SOURCE">Open Source Project</option>
               <option value="INTERNSHIP_PROJECT">Internship Project</option>
-              <option value="COURSE_PROJECT">Course Project</option>
+              <option value="PERSONAL">Personal / Independent Project</option>
+              <option value="OTHER">Other Project</option>
             </select>
           </div>
         </div>
