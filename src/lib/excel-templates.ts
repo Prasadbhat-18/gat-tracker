@@ -144,6 +144,7 @@ export function buildAchievementsWorksheet(workbook: ExcelJS.Workbook) {
     { header: "Organizing Body / Event", key: "organization", width: 28 },
     { header: "Position / Award", key: "position", width: 20 },
     { header: "Date (YYYY-MM-DD)", key: "date", width: 20 },
+    { header: "Certificate URL / Document Proof", key: "certificateUrl", width: 34 },
     { header: "Description / Remarks", key: "description", width: 34 },
   ]
   applyHeaderStyles(ws)
@@ -156,6 +157,7 @@ export function buildAchievementsWorksheet(workbook: ExcelJS.Workbook) {
     organization: "e.g. Smart India Hackathon / VTU",
     position: "1st Place / Winner / Runner-up",
     date: "YYYY-MM-DD",
+    certificateUrl: "Google Drive, DigiLocker or Cloud Document link (optional)",
     description: "Brief summary or project details",
   })
 
@@ -167,6 +169,7 @@ export function buildAchievementsWorksheet(workbook: ExcelJS.Workbook) {
     organization: "Ministry of Education & AICTE",
     position: "1st Place",
     date: "2024-09-15",
+    certificateUrl: "https://drive.google.com/file/d/sample-cert/view",
     description: "Built AI-powered crop disease detection platform using edge IoT sensors.",
   })
 
@@ -178,6 +181,7 @@ export function buildAchievementsWorksheet(workbook: ExcelJS.Workbook) {
     organization: "IEEE Discover 2024",
     position: "Best Paper",
     date: "2024-10-10",
+    certificateUrl: "https://drive.google.com/file/d/sample-paper-cert/view",
     description: "Research paper on Optimizing Transformer Inference on Edge Devices.",
   })
 
@@ -194,6 +198,7 @@ export function buildCertificationsWorksheet(workbook: ExcelJS.Workbook) {
     { header: "Expiry Date (YYYY-MM-DD)", key: "expiryDate", width: 22 },
     { header: "Credential ID", key: "credentialId", width: 22 },
     { header: "Verification URL", key: "credentialUrl", width: 30 },
+    { header: "Certificate URL / Document Proof", key: "certificateUrl", width: 34 },
     { header: "Description", key: "description", width: 30 },
   ]
   applyHeaderStyles(ws)
@@ -206,6 +211,7 @@ export function buildCertificationsWorksheet(workbook: ExcelJS.Workbook) {
     expiryDate: "YYYY-MM-DD (or blank)",
     credentialId: "Optional Credential ID",
     credentialUrl: "https://...",
+    certificateUrl: "Certificate file or Drive URL (optional)",
     description: "Optional notes",
   })
 
@@ -217,6 +223,7 @@ export function buildCertificationsWorksheet(workbook: ExcelJS.Workbook) {
     expiryDate: "2027-06-20",
     credentialId: "AWS-PSA-83921",
     credentialUrl: "https://aws.amazon.com/verify/AWS-PSA-83921",
+    certificateUrl: "https://drive.google.com/file/d/sample-aws-cert/view",
     description: "Validated proficiency in cloud architecture and microservices design.",
   })
 

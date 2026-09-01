@@ -45,8 +45,74 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json()
+
+    // 1. Resolve Student ID
+    let studentId = body.studentId
+    if (!studentId && body.usn) {
+      const student = await prisma.student.findUnique({
+        where: { usn: String(body.usn).trim().toUpperCase() },
+        select: { id: true, departmentId: true },
+      })
+      if (!student) {
+        return NextResponse.json(
+          { error: `Student with USN '${body.usn}' was not found in the database.` },
+          { status: 404 }
+        )
+      }
+      studentId = student.id
+    }
+
+    if (!studentId) {
+      return NextResponse.json({ error: "Student USN or Student ID is required." }, { status: 400 })
+    }
+
+    if (!body.title || !String(body.title).trim()) {
+      return NextResponse.json({ error: "Achievement title is required." }, { status: 400 })
+    }
+
+    // 2. Parse Date
+    let achievementDate = new Date()
+    if (body.achievementDate || body.date) {
+      const parsed = new Date(body.achievementDate || body.date)
+      if (!isNaN(parsed.getTime())) {
+        achievementDate = parsed
+      }
+    }
+
+    // 3. Normalize Category
+    const rawCategory = String(body.category || "ACADEMIC").toUpperCase().replace(/\s+/g, "_")
+    const validCategories = [
+      "HACKATHON", "ACADEMIC", "TECHNICAL", "SPORTS", "CULTURAL",
+      "RESEARCH", "PATENT", "PUBLICATION", "LEADERSHIP", "OTHER"
+    ]
+    const category = validCategories.includes(rawCategory) ? rawCategory : "OTHER"
+
+    // 4. Normalize Level
+    const rawLevel = String(body.level || "COLLEGE").toUpperCase().replace(/\s+/g, "_")
+    const validLevels = [
+      "INTERNATIONAL", "NATIONAL", "STATE", "UNIVERSITY", "INTER_COLLEGE", "COLLEGE", "DEPARTMENT"
+    ]
+    const level = validLevels.includes(rawLevel) ? rawLevel : "COLLEGE"
+
     const achievement = await prisma.achievement.create({
-      data: { ...body, addedById: session.user.id },
+      data: {
+        studentId,
+        title: String(body.title).trim(),
+        category: category as any,
+        level: level as any,
+        organization: body.organizingBody || body.organization || null,
+        position: body.awardPosition || body.position || null,
+        achievementDate,
+        documentUrl: body.certificateUrl || body.certificate || body.documentUrl || null,
+        description: body.description || null,
+        verificationStatus: session.user.role === "SUPER_ADMIN" || session.user.role === "HOD" ? "VERIFIED" : "PENDING",
+        verifiedById: session.user.role === "SUPER_ADMIN" || session.user.role === "HOD" ? session.user.id : null,
+        verifiedAt: session.user.role === "SUPER_ADMIN" || session.user.role === "HOD" ? new Date() : null,
+        addedById: session.user.id,
+      },
+      include: {
+        student: { select: { usn: true, name: true } },
+      },
     })
 
     await createAuditLog({
@@ -54,11 +120,15 @@ export async function POST(req: Request) {
       action: "CREATE",
       module: "achievements",
       recordId: achievement.id,
-      recordDesc: `Added achievement: ${achievement.title}`,
+      recordDesc: `Added achievement for ${(achievement as any).student?.usn ?? studentId}: ${achievement.title}`,
     })
 
     return NextResponse.json(achievement, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: "Failed to create achievement" }, { status: 500 })
+  } catch (error: any) {
+    console.error("Failed to create achievement:", error)
+    return NextResponse.json(
+      { error: error?.message || "Failed to create achievement record" },
+      { status: 500 }
+    )
   }
 }

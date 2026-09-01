@@ -58,13 +58,15 @@ export default async function PlacementsPage() {
         </div>
 
         {(isAdmin || isPlacement) && (
-          <Link
-            href="/placements/new"
-            className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Record Placement
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/import"
+              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              Import Excel
+            </Link>
+          </div>
         )}
       </div>
 

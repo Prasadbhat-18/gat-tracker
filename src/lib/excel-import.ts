@@ -46,6 +46,7 @@ export interface ParsedAchievementRow {
   organization?: string
   position?: string
   date?: Date | null
+  certificateUrl?: string
   description?: string
 }
 
@@ -57,6 +58,7 @@ export interface ParsedCertificationRow {
   expiryDate?: Date | null
   credentialId?: string
   credentialUrl?: string
+  certificateUrl?: string
   description?: string
 }
 
@@ -463,6 +465,7 @@ export async function previewExcelData(
         const orgIdx = colIdx("organizingbody", "organization", "organizer", "org", "body")
         const posIdx = colIdx("position", "award", "rank", "prize")
         const dateIdx = colIdx("date", "achievementdate", "eventdate")
+        const certUrlIdx = colIdx("certificateurl", "certificate", "certificatelink", "proof", "document", "url", "link")
         const descIdx = colIdx("description", "remarks", "details", "summary")
 
         const usn = String(getVal(usnIdx) ?? "").trim().toUpperCase()
@@ -508,6 +511,7 @@ export async function previewExcelData(
           organization: getVal(orgIdx) ? String(getVal(orgIdx)).trim() : undefined,
           position: getVal(posIdx) ? String(getVal(posIdx)).trim() : undefined,
           date: parseDateValue(getVal(dateIdx)),
+          certificateUrl: getVal(certUrlIdx) ? String(getVal(certUrlIdx)).trim() : undefined,
           description: getVal(descIdx) ? String(getVal(descIdx)).trim() : undefined,
         })
       }
@@ -948,6 +952,10 @@ export async function executeExcelImport(
         }
 
         try {
+          const certUrl = getVal(colIdx("certificateurl", "certificate", "certificatelink", "proof", "link", "url"))
+            ? String(getVal(colIdx("certificateurl", "certificate", "certificatelink", "proof", "link", "url"))).trim()
+            : null
+
           await prisma.achievement.create({
             data: {
               studentId,
@@ -956,7 +964,8 @@ export async function executeExcelImport(
               level: parseAchievementLevel(getVal(colIdx("level"))),
               organization: getVal(colIdx("organizingbody", "organization", "org")) ? String(getVal(colIdx("organizingbody", "organization", "org"))).trim() : null,
               position: getVal(colIdx("position", "award", "rank")) ? String(getVal(colIdx("position", "award", "rank"))).trim() : null,
-              achievementDate: parseDateValue(getVal(colIdx("date", "achievementdate"))),
+              achievementDate: parseDateValue(getVal(colIdx("date", "achievementdate"))) || new Date(),
+              documentUrl: certUrl,
               description: getVal(colIdx("description", "remarks")) ? String(getVal(colIdx("description", "remarks"))).trim() : null,
               verificationStatus: "VERIFIED",
               addedById: userId,
@@ -979,15 +988,20 @@ export async function executeExcelImport(
         }
 
         try {
+          const certFileUrl = getVal(colIdx("certificateurl", "certificate", "proof"))
+            ? String(getVal(colIdx("certificateurl", "certificate", "proof"))).trim()
+            : null
+
           await prisma.certification.create({
             data: {
               studentId,
               name,
-              issuingOrg: String(getVal(colIdx("issuingorganization", "organization", "issuingorg")) ?? "Online / Platform").trim(),
-              issueDate: parseDateValue(getVal(colIdx("issuedate", "date"))),
+              issuingOrg: String(getVal(colIdx("issuingorganization", "organization", "issuingorg", "platform")) ?? "Online / Platform").trim(),
+              issueDate: parseDateValue(getVal(colIdx("issuedate", "date"))) || new Date(),
               expiryDate: parseDateValue(getVal(colIdx("expirydate"))),
               credentialId: getVal(colIdx("credentialid")) ? String(getVal(colIdx("credentialid"))).trim() : null,
               credentialUrl: getVal(colIdx("verificationurl", "credentialurl", "url")) ? String(getVal(colIdx("verificationurl", "credentialurl", "url"))).trim() : null,
+              certificateUrl: certFileUrl,
               description: getVal(colIdx("description", "remarks")) ? String(getVal(colIdx("description", "remarks"))).trim() : null,
               verificationStatus: "VERIFIED",
               addedById: userId,

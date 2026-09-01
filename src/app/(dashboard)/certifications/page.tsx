@@ -109,6 +109,9 @@ export default async function CertificationsPage() {
                     Expiry Date
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
+                    Certificate
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
                     Status
                   </th>
                 </tr>
@@ -134,6 +137,31 @@ export default async function CertificationsPage() {
                     <td className="py-3.5 px-4 text-xs text-[#74777f]">{formatDate(c.issueDate)}</td>
                     <td className="py-3.5 px-4 text-xs text-[#74777f]">
                       {c.expiryDate ? formatDate(c.expiryDate) : "No Expiry"}
+                    </td>
+                    <td className="py-3.5 px-4 text-xs">
+                      {c.certificateUrl ? (
+                        <a
+                          href={c.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0058be] hover:underline bg-[#eff4ff] border border-[#adc6ff] px-2.5 py-1 rounded-md transition"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">description</span>
+                          View Proof
+                        </a>
+                      ) : c.credentialUrl ? (
+                        <a
+                          href={c.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0058be] hover:underline bg-[#eff4ff] border border-[#adc6ff] px-2.5 py-1 rounded-md transition"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                          Verify
+                        </a>
+                      ) : (
+                        <span className="text-[#74777f] text-[11px]">No doc</span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 text-xs">
                       <Badge

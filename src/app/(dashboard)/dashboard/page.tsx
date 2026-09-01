@@ -18,6 +18,7 @@ async function getDashboardData(userRole: string, departmentId?: string) {
     activeStudents,
     graduatedStudents,
     placedStudents,
+    eligibleStudents,
     totalAchievements,
     totalCertifications,
     totalInternships,
@@ -32,6 +33,12 @@ async function getDashboardData(userRole: string, departmentId?: string) {
     prisma.student.count({ where: { ...deptFilter, status: "ACTIVE" } }),
     prisma.student.count({ where: { ...deptFilter, status: "GRADUATED" } }),
     prisma.student.count({ where: { ...deptFilter, placementStatus: "PLACED" } }),
+    prisma.student.count({
+      where: {
+        ...deptFilter,
+        placementStatus: { in: ["ELIGIBLE", "APPLIED", "SHORTLISTED", "SELECTED", "PLACED"] },
+      },
+    }),
     prisma.achievement.count({ where: { student: deptFilter } }),
     prisma.certification.count({ where: { student: deptFilter } }),
     prisma.internship.count({ where: { student: deptFilter } }),
@@ -39,7 +46,7 @@ async function getDashboardData(userRole: string, departmentId?: string) {
     prisma.higherStudy.count({ where: { student: deptFilter } }),
     prisma.company.count(),
     prisma.auditLog.findMany({
-      take: 10,
+      take: 8,
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true } } },
     }),
@@ -51,10 +58,6 @@ async function getDashboardData(userRole: string, departmentId?: string) {
           select: {
             students: { where: { placementStatus: "PLACED" } },
           },
-        },
-        students: {
-          select: { id: true },
-          where: deptFilter.departmentId ? { departmentId: deptFilter.departmentId } : {},
         },
       },
     }),
@@ -73,13 +76,6 @@ async function getDashboardData(userRole: string, departmentId?: string) {
       take: 4,
     }),
   ])
-
-  const eligibleStudents = await prisma.student.count({
-    where: {
-      ...deptFilter,
-      placementStatus: { in: ["ELIGIBLE", "APPLIED", "SHORTLISTED", "SELECTED", "PLACED"] },
-    },
-  })
 
   return {
     totalStudents,

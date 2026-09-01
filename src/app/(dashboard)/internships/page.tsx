@@ -46,17 +46,10 @@ export default async function InternshipsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/import"
-              className="flex items-center gap-2 bg-[#eff4ff] border border-[#0058be]/30 text-[#0058be] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#d6e3ff] transition-colors shadow-sm"
+              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
             >
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
-            </Link>
-            <Link
-              href="/internships/new"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Internship
             </Link>
           </div>
         )}

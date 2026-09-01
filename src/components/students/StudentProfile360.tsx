@@ -328,22 +328,136 @@ export function StudentProfile360({ student }: StudentProfileProps) {
         </div>
       )}
 
-      {/* Achievements Tab */}
+      {/* Achievements & Certifications Tab */}
       {activeTab === "achievements" && (
-        <div className="bg-white border border-[#c4c6cf] rounded-xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-[#c4c6cf] rounded-xl p-6 shadow-sm space-y-8">
+          {/* Achievements */}
           <div>
-            <h2 className="text-base font-bold text-[#000a1e] mb-3">Co-Curricular &amp; Technical Achievements</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#000a1e]">Co-Curricular &amp; Technical Achievements</h2>
+                <p className="text-xs text-[#74777f]">Hackathons, papers, academic competitions, and awards</p>
+              </div>
+              <a
+                href={`/achievements/new?usn=${student.usn}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#000a1e] hover:bg-[#002147] text-white text-xs font-semibold rounded-lg transition shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                Record Achievement
+              </a>
+            </div>
+
             {student.achievements.length === 0 ? (
-              <p className="text-xs text-[#74777f] py-4">No achievement entries on record.</p>
+              <div className="p-8 text-center bg-[#f8f9ff] border border-dashed border-[#c4c6cf] rounded-xl text-xs text-[#74777f]">
+                No achievement entries recorded for this student yet.
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {student.achievements.map((a) => (
-                  <div key={a.id} className="p-3.5 rounded-lg border border-[#c4c6cf] bg-[#f8f9ff]">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-xs font-bold text-[#000a1e]">{a.title}</h3>
-                      <Badge variant="success">{a.verificationStatus}</Badge>
+                {student.achievements.map((a: any) => (
+                  <div key={a.id} className="p-4 rounded-xl border border-[#c4c6cf] bg-[#f8f9ff] flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className="text-xs font-bold text-[#000a1e] leading-snug">{a.title}</h3>
+                        <Badge variant={a.verificationStatus === "VERIFIED" ? "success" : "warning"}>
+                          {a.verificationStatus}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-[#44474e] mt-1">
+                        {a.category} • {formatDate(a.achievementDate ?? a.awardDate)}
+                        {a.level ? ` • ${a.level.replace(/_/g, " ")}` : ""}
+                      </p>
+                      {(a.organization ?? a.organizingBody) && (
+                        <p className="text-[11px] text-[#74777f] mt-0.5">Org: {a.organization ?? a.organizingBody}</p>
+                      )}
+                      {(a.position ?? a.awardPosition) && (
+                        <p className="text-[11px] font-semibold text-[#002147] mt-0.5">Award: {a.position ?? a.awardPosition}</p>
+                      )}
                     </div>
-                    <p className="text-[11px] text-[#44474e] mt-1">{a.category} • {formatDate(a.awardDate)}</p>
+
+                    {(a.documentUrl || a.certificateUrl) && (
+                      <div className="mt-3 pt-2.5 border-t border-[#e2e8f0] flex justify-end">
+                        <a
+                          href={a.documentUrl || a.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0058be] hover:underline bg-white border border-[#adc6ff] px-2.5 py-1 rounded-md"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">description</span>
+                          View Certificate
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Certifications */}
+          <div className="pt-6 border-t border-[#eff4ff]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#000a1e]">Professional &amp; Cloud Certifications</h2>
+                <p className="text-xs text-[#74777f]">Industry credentials, NPTEL, AWS, Azure, Google Cloud</p>
+              </div>
+              <a
+                href={`/certifications/new?usn=${student.usn}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#c4c6cf] hover:bg-[#eff4ff] text-[#000a1e] text-xs font-semibold rounded-lg transition shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                Record Certification
+              </a>
+            </div>
+
+            {(!student.certifications || student.certifications.length === 0) ? (
+              <div className="p-8 text-center bg-[#f8f9ff] border border-dashed border-[#c4c6cf] rounded-xl text-xs text-[#74777f]">
+                No professional certifications recorded for this student yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {student.certifications.map((c: any) => (
+                  <div key={c.id} className="p-4 rounded-xl border border-[#c4c6cf] bg-[#f8f9ff] flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className="text-xs font-bold text-[#000a1e] leading-snug">{c.name}</h3>
+                        <Badge variant={c.verificationStatus === "VERIFIED" ? "success" : "default"}>
+                          {c.verificationStatus}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-[#44474e] mt-1">
+                        {c.issuingOrganization} • Issued: {formatDate(c.issueDate)}
+                      </p>
+                      {c.credentialId && (
+                        <p className="text-[10px] font-mono text-[#74777f] mt-0.5">ID: {c.credentialId}</p>
+                      )}
+                    </div>
+
+                    {(c.certificateUrl || c.credentialUrl) && (
+                      <div className="mt-3 pt-2.5 border-t border-[#e2e8f0] flex justify-end gap-2">
+                        {c.credentialUrl && (
+                          <a
+                            href={c.credentialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#44474e] hover:underline bg-white border border-[#c4c6cf] px-2.5 py-1 rounded-md"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                            Verify
+                          </a>
+                        )}
+                        {c.certificateUrl && (
+                          <a
+                            href={c.certificateUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#0058be] hover:underline bg-white border border-[#adc6ff] px-2.5 py-1 rounded-md"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">description</span>
+                            View Certificate
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
