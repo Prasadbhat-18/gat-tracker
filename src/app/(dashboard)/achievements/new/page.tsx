@@ -16,7 +16,7 @@ export default async function NewAchievementPage({ searchParams }: Props) {
   const session = await auth()
   if (!session) redirect("/login")
 
-  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
+  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role?.toUpperCase())
   if (!canEdit) redirect("/achievements")
 
   const resolvedParams = await searchParams

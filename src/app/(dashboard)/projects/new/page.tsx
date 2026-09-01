@@ -16,7 +16,7 @@ export default async function NewProjectPage({ searchParams }: Props) {
   const session = await auth()
   if (!session) redirect("/login")
 
-  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY"].includes(session.user.role)
+  const canEdit = ["SUPER_ADMIN", "HOD", "FACULTY", "PLACEMENT_OFFICER"].includes(session.user.role?.toUpperCase())
   if (!canEdit) redirect("/projects")
 
   const resolvedParams = await searchParams
