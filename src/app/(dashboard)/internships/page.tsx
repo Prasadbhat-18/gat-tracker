@@ -46,10 +46,17 @@ export default async function InternshipsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/import"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
+              className="flex items-center gap-2 bg-[#eff4ff] border border-[#0058be]/30 text-[#0058be] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#d6e3ff] transition-colors shadow-sm"
             >
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
+            </Link>
+            <Link
+              href="/internships/new"
+              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Add Internship
             </Link>
           </div>
         )}
@@ -93,7 +100,7 @@ export default async function InternshipsPage() {
                     Company
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
-                    Role / Domain
+                    Role
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
                     Duration
@@ -103,6 +110,9 @@ export default async function InternshipsPage() {
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
                     Dates
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
+                    Certificate
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
                     Status
@@ -133,6 +143,21 @@ export default async function InternshipsPage() {
                     </td>
                     <td className="py-3.5 px-4 text-xs text-[#74777f]">
                       {formatDate(i.startDate)} – {formatDate(i.endDate)}
+                    </td>
+                    <td className="py-3.5 px-4 text-xs">
+                      {i.certificateUrl ? (
+                        <a
+                          href={i.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0058be] hover:underline bg-[#eff4ff] border border-[#adc6ff] px-2.5 py-1 rounded-md transition"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">description</span>
+                          View Proof
+                        </a>
+                      ) : (
+                        <span className="text-[#74777f] text-[11px]">No doc</span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 text-xs">
                       <Badge

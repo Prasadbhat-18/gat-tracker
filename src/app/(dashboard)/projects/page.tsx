@@ -45,10 +45,17 @@ export default async function ProjectsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/import"
-              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
+              className="flex items-center gap-2 bg-[#eff4ff] border border-[#0058be]/30 text-[#0058be] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#d6e3ff] transition-colors shadow-sm"
             >
               <span className="material-symbols-outlined text-[18px]">upload_file</span>
               Import Excel
+            </Link>
+            <Link
+              href="/projects/new"
+              className="flex items-center gap-2 bg-[#000a1e] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#002147] transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Add Project
             </Link>
           </div>
         )}
@@ -101,6 +108,9 @@ export default async function ProjectsPage() {
                     Faculty Guide
                   </th>
                   <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
+                    Links & Docs
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-[#44474e] uppercase tracking-wider whitespace-nowrap">
                     Status
                   </th>
                 </tr>
@@ -137,6 +147,35 @@ export default async function ProjectsPage() {
                       </div>
                     </td>
                     <td className="py-3.5 px-4 text-xs text-[#44474e]">{p.facultyGuide ?? "—"}</td>
+                    <td className="py-3.5 px-4 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        {p.githubUrl && (
+                          <a
+                            href={p.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0058be] hover:underline text-[11px] font-semibold flex items-center gap-0.5"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">code</span>
+                            Code
+                          </a>
+                        )}
+                        {p.documentUrl && (
+                          <a
+                            href={p.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0058be] hover:underline text-[11px] font-semibold flex items-center gap-0.5 bg-[#eff4ff] px-1.5 py-0.5 rounded border border-[#adc6ff]"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">description</span>
+                            Doc
+                          </a>
+                        )}
+                        {!p.githubUrl && !p.documentUrl && (
+                          <span className="text-[#74777f] text-[11px]">—</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-3.5 px-4 text-xs">
                       <Badge
                         variant={

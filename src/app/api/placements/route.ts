@@ -12,24 +12,83 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json()
+    let studentId = body.studentId
+
+    if (!studentId && body.usn) {
+      const student = await prisma.student.findUnique({
+        where: { usn: String(body.usn).trim().toUpperCase() },
+        select: { id: true, usn: true, name: true },
+      })
+      if (!student) {
+        return NextResponse.json({ error: `Student with USN '${body.usn}' not found` }, { status: 404 })
+      }
+      studentId = student.id
+    }
+
+    if (!studentId) {
+      return NextResponse.json({ error: "Student USN or ID is required" }, { status: 400 })
+    }
+
+    let companyId = body.companyId
+    if (!companyId && body.companyName) {
+      const comp = await prisma.company.upsert({
+        where: { name: String(body.companyName).trim() },
+        update: {},
+        create: { name: String(body.companyName).trim() },
+      })
+      companyId = comp.id
+    }
+
+    if (!companyId) {
+      return NextResponse.json({ error: "Company selection is required" }, { status: 400 })
+    }
+
+    let offerDate: Date | null = null
+    if (body.offerDate) {
+      const parsed = new Date(body.offerDate)
+      if (!isNaN(parsed.getTime())) offerDate = parsed
+    }
+
+    let joiningDate: Date | null = null
+    if (body.joiningDate) {
+      const parsed = new Date(body.joiningDate)
+      if (!isNaN(parsed.getTime())) joiningDate = parsed
+    }
+
+    const ctc = body.ctc ? parseFloat(body.ctc) : null
+
     const placement = await prisma.placement.create({
-      data: { ...body, addedById: session.user.id },
+      data: {
+        studentId,
+        companyId,
+        driveId: body.driveId || null,
+        jobRole: String(body.jobRole || "Software Engineer").trim(),
+        ctc,
+        location: body.location || null,
+        offerDate,
+        joiningDate,
+        offerStatus: body.offerStatus || "OFFERED",
+        isFinalAccepted: Boolean(body.isFinalAccepted),
+        offerLetterUrl: body.offerLetterUrl || body.certificateUrl || null,
+        remarks: body.remarks || null,
+        addedById: session.user.id,
+      },
     })
 
-    // Update student placement status if this is accepted
+    // Update student placement status if accepted or final
     if (body.offerStatus === "ACCEPTED" || body.isFinalAccepted) {
       await prisma.student.update({
-        where: { id: body.studentId },
+        where: { id: studentId },
         data: { placementStatus: "PLACED", careerOutcome: "PLACED" },
       })
     }
 
     const student = await prisma.student.findUnique({
-      where: { id: body.studentId },
+      where: { id: studentId },
       select: { name: true, usn: true },
     })
     const company = await prisma.company.findUnique({
-      where: { id: body.companyId },
+      where: { id: companyId },
       select: { name: true },
     })
 
@@ -38,12 +97,13 @@ export async function POST(req: Request) {
       action: "CREATE",
       module: "placements",
       recordId: placement.id,
-      recordDesc: `${student?.name} (${student?.usn}) placed at ${company?.name} — ₹${body.ctc} LPA`,
+      recordDesc: `${student?.name} (${student?.usn}) placed at ${company?.name} — ₹${ctc ?? 0} LPA`,
     })
 
     return NextResponse.json(placement, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: "Failed to record placement" }, { status: 500 })
+  } catch (err: any) {
+    console.error("Failed to record placement:", err)
+    return NextResponse.json({ error: err?.message || "Failed to record placement" }, { status: 500 })
   }
 }
 
